@@ -2,6 +2,10 @@ import { useState } from "react";
 import type { TaskType } from "../types";
 import { useTask } from "../Contexts/TaskContext.tsx";
 
+import trash from "/Icons/trash-fill.svg"
+import check from "/Icons/check2.svg"
+import copy from "/Icons/clipboard.svg"
+
 interface CheckBoxProps {
     completeHook: {
         completada: boolean;
@@ -14,7 +18,7 @@ const CheckBox = ({ completeHook: { completada, turnComplete } }: CheckBoxProps)
 
     return (
         <div className="w-9 aspect-square bg-blue-100 flex border-2 border-blue-500 rounded-md cursor-pointer justify-center items-center overflow-hidden select-none" onClick={turnComplete}>
-            {completada && <img src="/Icons/check2.svg" alt="check" className="w-full bg-blue-300" />}
+            {completada && <img src={check} alt="check" className="w-full bg-blue-300" />}
         </div>
     );
 };
@@ -64,10 +68,10 @@ function Task({ tareaProp: { titulo, descripcion, completada, id } }: TaskProps)
                 </div>
 
                 <button type="button" className="w-10 aspect-square cursor-pointer bg-blue-100 border-2 border-blue-300 flex justify-center items-center rounded-md select-none">
-                    <img src="/Icons/trash-fill.svg" className="w-5" alt="borrar" onClick={handleDelete} />
+                    <img src={trash} className="w-5" alt="borrar" onClick={handleDelete} />
                 </button>
                 <button type="button" className="w-10 aspect-square cursor-pointer bg-blue-100 border-2 border-blue-300 flex justify-center items-center rounded-md select-none" onClick={copyTask}>
-                    <img src="/Icons/clipboard.svg" className="w-5" alt="editar" />
+                    <img src={copy} className="w-5" alt="editar" />
                 </button>
             </div>
         </div>
