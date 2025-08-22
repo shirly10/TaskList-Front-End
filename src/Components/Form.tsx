@@ -17,7 +17,6 @@ function Formulario() {
     const onSubmit = handleSubmit((data) => {
         console.log(data)
         addTask(data);
-        alert("Tarea agregada con éxito");
         turnViewForm();
     });
 

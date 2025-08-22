@@ -1,12 +1,16 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 // import { guardarTareas } from "../data/taskManager.ts";
 import type { TaskType } from "../types.ts";
+// import Task from "../Components/Task.tsx";
+// import dotenv from 'dotenv';
+
+// dotenv.config();
 
 interface TaskContextType {
     tasks: TaskType[]
-    addTask: (task: Omit<TaskType, 'id' | 'completada' | 'borrada'>) => Promise<void>
-    checkTask: (id: number) => Promise<void>
-    deleteTask: (id: number) => Promise<void>
+    addTask: (task: Omit<TaskType, '_id' | 'completada'>) => Promise<void>
+    checkTask: (_id: string) => Promise<void>
+    deleteTask: (_id: string) => Promise<void>
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -17,7 +21,7 @@ function TaskProvider({ children }: {children: ReactNode}) {
 
     useEffect(() => {
         async function fetchTask() {
-            const response = await fetch('http://localhost:3000/task');
+            const response = await fetch(import.meta.env.VITE_API + '/task');
             const loadedTasks = await response.json() as TaskType[];
             // const loadedTasks = await obtenerTareas();
             setTasks(loadedTasks);
@@ -25,19 +29,21 @@ function TaskProvider({ children }: {children: ReactNode}) {
         fetchTask();
     }, []);
 
-    const addTask: TaskContextType['addTask'] = async ({titulo, descripcion}) => {
+    const addTask: TaskContextType['addTask'] = async (task) => {
 
         try {
-            const response = await fetch('http://localhost:3000/task', {
+            const response = await fetch(import.meta.env.VITE_API + '/task', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({titulo, descripcion})
+            body: JSON.stringify(task)
         })
         const newTask = await response.json() as TaskType
 
         const updatedTasks = [...tasks, newTask]
+
+        alert('Tarea agregada con éxito');
         setTasks(updatedTasks)
         } catch (error) {
             console.error(error)
@@ -56,20 +62,31 @@ function TaskProvider({ children }: {children: ReactNode}) {
         // await guardarTareas(updatedTasks);
     };
 
-    const checkTask: TaskContextType['checkTask'] = async (id) => {
+    const checkTask: TaskContextType['checkTask'] = async (_id) => {
 
         try {
-            const response = await fetch(`http://localhost:3000/task/${id}`, {
+            const response = await fetch(import.meta.env.VITE_API + '/task/' + _id, {
             headers: {
                 'Content-Type': 'application/json'
             },
             method: 'PATCH'
         })
-            const checkedTask = await response.json() as TaskType
+            const checkedTask = await response.json() as Pick<TaskType, '_id' | 'completada'>
 
-            const updatedTask = tasks.map(task => task.id == checkedTask.id ? checkedTask : task)
+            const updatedTasks = [...tasks]
+            const searchTaskIndex = updatedTasks.findIndex( task => task._id == checkedTask._id)
+
+            if ( searchTaskIndex == -1 ) {
+                throw new Error('No se encontró la tarea a marcar');
+            }
+
+            updatedTasks[searchTaskIndex].completada = checkedTask.completada;
+
+            setTasks(updatedTasks);
+
+            // const updatedTask = tasks.map(task => task._id == checkedTask._id ? checkedTask : task)
         
-            setTasks(updatedTask)
+            // setTasks(updatedTask)
         } catch (error) {
             console.error(error)
             alert('Error al marcar la tarea')
@@ -83,10 +100,10 @@ function TaskProvider({ children }: {children: ReactNode}) {
         // await guardarTareas(updatedTasks);
     }
     
-    const deleteTask: TaskContextType['deleteTask'] = async (id) => {
+    const deleteTask: TaskContextType['deleteTask'] = async (_id) => {
         
         try {
-            const response = await fetch(`http://localhost:3000/task/${id}`, {
+            const response = await fetch(import.meta.env.VITE_API + '/task/' + _id, {
                 method: 'DELETE'
             })
 
@@ -94,7 +111,9 @@ function TaskProvider({ children }: {children: ReactNode}) {
                 throw new Error('Error al borrar la tarea')
             }
 
-            const updatedTasks = tasks.filter(task => task.id !== id)
+            const deletedTask = await response.json() as Pick<TaskType, '_id'>
+            console.log(deletedTask)
+            const updatedTasks = tasks.filter(task => task._id !== deletedTask._id)
             setTasks(updatedTasks)
         } catch (error) {
             console.error(error)
